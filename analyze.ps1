@@ -10,7 +10,7 @@ select new { m, m.NbLinesOfCode }
 #>
 
 $nDepend = "C:\_DEVELOPMENT\nDepend\NDepend.Console.exe"
-$targetFile = "C:\_DEVELOPMENT\codechallenge\CodeChallenge.Domain.ndproj"
+$targetFile = "C:\_DEVELOPMENT\AssemblyToTest\CodeChallenge.Domain.ndproj"
 $projectFolder = Split-Path -Path $targetFile
 $outputFolder = "nDepend.Reports"
 
