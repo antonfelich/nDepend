@@ -9,19 +9,20 @@ select new { m, m.NbLinesOfCode }
 
 #>
 
-$nDepend = "C:\_DEVELOPMENT\nDepend\NDepend.Console.exe"
-$targetFile = "C:\_DEVELOPMENT\AssemblyToTest\CodeChallenge.Domain.ndproj"
+$nDepend = "C:\Users\jimp\Downloads\ndepend\NDepend.Console.exe"
+$targetFile =  "C:\Users\jimp\dev\nDepend\TestSolution\TestSolution.ndproj"
 $projectFolder = Split-Path -Path $targetFile
 $outputFolder = "nDepend.Reports"
 
 $previous = ""
 Clear-Host
 
-# See if we already have a .ndar file in the output folder, if we do back it up so we can do a comparison
+
 if (Test-Path $projectFolder\$outputFolder\*.ndar)
 {
 	Write-Output "Backing up previous NDAR report"
 	Copy-Item $projectFolder\$outputFolder\*.ndar $projectFolder\previous.ndar
+	
 	$previous = ".\previous.ndar"
 }
 
