@@ -9,14 +9,16 @@ select new { m, m.NbLinesOfCode }
 
 #>
 
-$nDepend = "C:\Users\jimp\Downloads\ndepend\NDepend.Console.exe"
-$targetFile =  "C:\Users\jimp\dev\nDepend\TestSolution\TestSolution.ndproj"
+$root = pwd
+$nDepend = ".\NDepend.Console.exe"
+$targetFile =  "$root\TestSolution\TestSolution.ndproj"
 $projectFolder = Split-Path -Path $targetFile
 $outputFolder = "nDepend.Reports"
 
 $previous = ""
 Clear-Host
-
+Write-Output "Analysing: - $targetFile"
+Write-Output "ProjectFolder: - $projectFolder" 
 
 if (Test-Path $projectFolder\$outputFolder\*.ndar)
 {
