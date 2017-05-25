@@ -6,6 +6,8 @@
 4. Build again
 5. Run analyze.ps1
 
+??. Jim's branch works on Jim's machine... but nowhere else! Looks like the ndproj file has some absolute paths in it so its machine specific. 
+
 expectged result: an error should be output
 
 
