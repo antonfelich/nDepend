@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <NDepend AppName="TestSolution" Platform="DotNet" FileWrittenByProductVersion="2017.1.1.8920">
-  <OutputDir KeepXmlFiles="False">C:\Users\jimp\dev\nDepend\TestSolution\NDependOut</OutputDir>
+  <OutputDir KeepXmlFiles="False">.\TestSolution\NDependOut</OutputDir>
   <Assemblies>
     <Name>TestSolution</Name>
   </Assemblies>
@@ -8,14 +8,14 @@
     <Name>mscorlib</Name>
   </FrameworkAssemblies>
   <Dirs>
-    <Dir>C:\Users\jimp\dev\nDepend\TestSolution\TestSolution\bin\Debug</Dir>
+	<Dir>.\TestSolution\bin\Debug</Dir>
     <Dir>C:\windows\Microsoft.NET\Framework\v4.0.30319</Dir>
     <Dir>C:\windows\Microsoft.NET\Framework\v4.0.30319\WPF</Dir>
   </Dirs>
   <MergeCodeGeneratedByCompiler>True</MergeCodeGeneratedByCompiler>
   <Report Kind="0" SectionsEnabled="110591" XslPath="" Flags="261120" />
   <BuildComparisonSetting ProjectMode="CurrentProject" BuildMode="NDaysAgoAnalysisResult" ProjectFileToCompareWith="" BuildFileToCompareWith="" NDaysAgo="30" />
-  <BaselineInUISetting ProjectMode="CurrentProject" BuildMode="MostRecentAnalysisResultAvailable" ProjectFileToCompareWith="C:\Users\jimp\dev\nDepend\TestSolution\TestSolution.ndproj" BuildFileToCompareWith="C:\Users\jimp\dev\nDepend\TestSolution\NDependOut\NDependAnalysisResult_TestSolution_2017May05_13h11.ndar" NDaysAgo="30" />
+  <BaselineInUISetting ProjectMode="CurrentProject" BuildMode="MostRecentAnalysisResultAvailable" ProjectFileToCompareWith=".\TestSolution.ndproj" BuildFileToCompareWith=".\previous.ndar" NDaysAgo="30" />
   <CoverageFiles CoverageDir="" UncoverableAttribute="" />
   <TrendMetrics UseCustomLog="False" LogRecurrence="3" LogLabel="2" UseCustomDir="False" CustomDir="">
     <Chart Name="Size" ShowInReport="True">
