@@ -243,6 +243,8 @@ _Pvt_Extensions
 #nDepend
 integration/
 lib/
+current.ndar
+nDepend.Reports/
 
 # Paket dependency manager
 .paket/paket.exe
