@@ -24,36 +24,44 @@ $nDepend = ".\NDepend.Console.exe"
 $targetFile =  "$root\TestSolution\TestSolution.ndproj"
 $projectFolder = Split-Path -Path $targetFile
 $outputFolder = "nDepend.Reports"
+$targetBucket = "ndepend-reports"
+$absoluteReportPath = "$projectFolder\$outputFolder\"
+$relativeReportPath = Resolve-Path -Relative $absoluteReportPath
+
 
 $previous = ""
 Clear-Host
 
-function BackupSuccessfulReport()
+Import-Module AWSPowershell
+Set-AWSCredentials -AccessKey $AWSAccessKey -SecretKey $AWSSecretKey -SessionToken $AWSSessionToken
+
+function BackupSuccessfulReportToS3()
 {
 	if (Test-Path $projectFolder\$outputFolder\*.ndar)
 	{
-		Write-Output "Backing up previous NDAR report"
-		$absoluteSearchPath = "$projectFolder\$outputFolder\"
-		$relativeSearchPath = Resolve-Path -Relative $absoluteSearchPath
-
-		$latestReport = (Get-ChildItem -Filter "$relativeSearchPath\*.ndar" | Select-Object -First 1).Name
-
-		$targetBucket = "ndepend-reports"
-
+		Write-Output "Backing up previous NDAR report to S3"
+		$latestReport = (Get-ChildItem -Filter "$relativeReportPath\*.ndar" | Select-Object -First 1).Name
 		$targetFilename = iex "git rev-parse head"
-
-		Import-Module AWSPowershell
-		Set-AWSCredentials -AccessKey $AWSAccessKey -SecretKey $AWSSecretKey -SessionToken $AWSSessionToken
 
 		Write-Output "Source file: $latestReport"
 		Write-Output "Target bucket: $targetBucket"
-		Write-Output "Target bucket: $targetFilename"
+		Write-Output "Target file: $targetFilename.ndar"
 
-		Write-S3Object -BucketName $targetBucket -File "$absoluteSearchPath\$latestReport" -Key "$targetFilename.ndar" -Region ap-southeast-2
+		Write-S3Object -BucketName $targetBucket -File "$absoluteReportPath\$latestReport" -Key "$targetFilename" -Region ap-southeast-2
 		Copy-Item $projectFolder\$outputFolder\*.ndar $projectFolder\previous.ndar
 
 		$previous = ".\previous.ndar"
 	}
+}
+
+function RestoreLatestReportFromS3()
+{
+	Write-Output "Restoring latest NDAR report from S3"
+	Write-Output "Source bucket: $targetBucket"
+	$sourceFilename = (Get-S3Object -BucketName $targetBucket | Sort-Object LastModified -Descending | Select-Object -First 1).Key
+	Write-Output "Source file: $sourceFilename"
+
+	Read-S3Object -BucketName $targetBucket -File "$absoluteReportPath\$sourceFilename" -Key "$sourceFilename" -Region ap-southeast-2
 }
 
 function AnalyseSolution()
@@ -69,7 +77,7 @@ Write-Output "Building solution..."
 Write-Output "Analysing: - $targetFile"
 Write-Output "ProjectFolder: - $projectFolder"
 
-BackupSuccessfulReport
+BackupSuccessfulReportToS3
 
 #The output path appears to be relative to the .ndproj file
 
