@@ -15,6 +15,11 @@ select new { m, m.NbLinesOfCode }
 #     [Parameter(Mandatory=$True)][string]$AWSSessionToken
 # )
 
+param
+(
+	[Parameter(Mandatory=$False)][string]$BaselineFilePath
+)
+
 $AWSAccessKey = ''
 $AWSSecretKey = ''
 $AWSSessionToken = ''
@@ -28,61 +33,99 @@ $targetBucket = "ndepend-reports"
 $absoluteReportPath = "$projectFolder\$outputFolder\"
 $relativeReportPath = Resolve-Path -Relative $absoluteReportPath
 
-
 $previous = ""
 Clear-Host
 
 Import-Module AWSPowershell
 Set-AWSCredentials -AccessKey $AWSAccessKey -SecretKey $AWSSecretKey -SessionToken $AWSSessionToken
 
+function BackupBaselineReportToS3()
+{
+	BackupReportToS3 $BaselineFilePath "baseline"
+}
+
 function BackupSuccessfulReportToS3()
 {
 	if (Test-Path $projectFolder\$outputFolder\*.ndar)
 	{
-		Write-Output "Backing up previous NDAR report to S3"
 		$latestReport = (Get-ChildItem -Filter "$relativeReportPath\*.ndar" | Select-Object -First 1).Name
-		$targetFilename = iex "git rev-parse head"
+		$targetFileKey = iex "git rev-parse head"
 
-		Write-Output "Source file: $latestReport"
-		Write-Output "Target bucket: $targetBucket"
-		Write-Output "Target file: $targetFilename.ndar"
-
-		Write-S3Object -BucketName $targetBucket -File "$absoluteReportPath\$latestReport" -Key "$targetFilename" -Region ap-southeast-2
-		Copy-Item $projectFolder\$outputFolder\*.ndar $projectFolder\previous.ndar
-
-		$previous = ".\previous.ndar"
+		BackupReportToS3 "$absoluteReportPath$latestReport" $targetFileKey
 	}
 }
 
+function BackupReportToS3([Parameter(Mandatory=$True)][string]$sourceFilePath, [Parameter(Mandatory=$True)][string]$targetFileKey)
+{
+	Write-Host "Backing up NDAR report to S3 by filepath [$sourceFilePath] to [$targetFileKey]"
+
+	Write-Host "Source file: $sourceFilePath"
+	Write-Host "Target bucket: $targetBucket"
+	Write-Host "Target file key: $targetFileKey"
+
+	Write-S3Object -BucketName $targetBucket -File $sourceFilePath -Key "$targetFileKey" -Region ap-southeast-2
+
+	Write-Host "File backed up to S3 successfully"
+}
+
+
 function RestoreLatestReportFromS3()
 {
-	Write-Output "Restoring latest NDAR report from S3"
-	Write-Output "Source bucket: $targetBucket"
-	$sourceFilename = (Get-S3Object -BucketName $targetBucket | Sort-Object LastModified -Descending | Select-Object -First 1).Key
-	Write-Output "Source file: $sourceFilename"
+	try
+	{
+		$sourceFileKey = iex "git rev-parse head~1"
+		return RestoreReportFromS3 $sourceFileKey
+	}
+	catch
+	{
+		if ($_.Exception.Message -eq "The specified key does not exist.")
+		{
+			$sourceFileKey = "baseline"
+			return RestoreReportFromS3 $sourceFileKey
+		}
 
-	Read-S3Object -BucketName $targetBucket -File "$absoluteReportPath\$sourceFilename" -Key "$sourceFilename" -Region ap-southeast-2
+		Write-Host $_.Exception.Message
+		Exit
+	}
 }
 
-function AnalyseSolution()
+function RestoreReportFromS3([Parameter(Mandatory=$True)][string]$sourceFileKey)
 {
-	& $nDepend $targetFile /Silent /OutDir .\$outputFolder /AnalysisResultToCompareWith .\previous.ndar
-	Write-Host $LASTEXITCODE
+	Write-Host "Restoring NDAR report from S3 by key [$sourceFileKey]"
+	Write-Host "Source bucket: $targetBucket"
+
+	$sourceFilename = "$sourceFileKey.ndar"
+	Write-Host "Source file: $sourceFilename"
+
+	Read-S3Object -BucketName $targetBucket -File "$absoluteReportPath$sourceFilename" -Key "$sourceFileKey" -Region ap-southeast-2 | out-null
+	return "$absoluteReportPath$sourceFilename"
 }
 
-Write-Output "Building solution..."
+function AnalyseSolution([Parameter(Mandatory=$True)][string]$previousFilename)
+{
+	& $nDepend $targetFile /Silent /OutDir .\$outputFolder /AnalysisResultToCompareWith $previousFilename
+	return $LASTEXITCODE
+}
 
-.\build.ps1
+if (![string]::IsNullOrEmpty($BaselineFilePath))
+{
+	BackupBaselineReportToS3
+	exit
+}
 
-Write-Output "Analysing: - $targetFile"
-Write-Output "ProjectFolder: - $projectFolder"
+Write-Host "Building solution..."
+.\build.ps1 | out-null
 
-BackupSuccessfulReportToS3
+#Download the previous comparison file (or get baseline if there isn't one)
+$previous = RestoreLatestReportFromS3
 
-#The output path appears to be relative to the .ndproj file
-
-# Capture the failure code from below
-AnalyseSolution
-
+# Run the comparison
+Write-Host "Analysing: - $targetFile"
+Write-Host "ProjectFolder: - $projectFolder"
+$result = AnalyseSolution $previous
 
 # If success then copy current.ndar over previous.ndar and backup history
+if ($result -eq 0)
+{
+	BackupSuccessfulReportToS3
+}
