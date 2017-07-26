@@ -48,7 +48,7 @@ function BackupSuccessfulReportToS3()
 {
 	if (Test-Path $projectFolder\$outputFolder\*.ndar)
 	{
-		$latestReport = (Get-ChildItem -Filter "$relativeReportPath\*.ndar" | Select-Object -First 1).Name
+		$latestReport = (Get-ChildItem -Filter "$relativeReportPath\*.ndar" | Sort-Object -Property LastWriteTime -Descending | Select-Object -First 1).Name
 		$targetFileKey = iex "git rev-parse head"
 
 		BackupReportToS3 "$absoluteReportPath$latestReport" $targetFileKey

@@ -13,7 +13,7 @@ expectged result: an error should be output
 - [X] Write a build script for the target project (inside _analyse.ps1_ probably)
 - [X] Convert it to use S3 to store the _previous.ndar_ file (keyed by solution name probably)
 - [X] Before running analysis, grab the previous from S3
-- [ ] Need to modify the backup process so it grabs the latest report by date, not by name
+- [X] Need to modify the backup process so it grabs the latest report by date, not by name
 - [ ] Possible issue in that we save previous.ndar regardless of the results, therefore commiting again = no fail because its the same (aka. only backup on success)
 - [ ] Move to monolith
 - [ ] Get in Phabricator (how do we get _nDepend.exe_ on the build agent?)
