@@ -106,8 +106,9 @@ function RestoreReportFromS3([Parameter(Mandatory=$True)][string]$sourceFileKey)
 	$sourceFilename = "$sourceFileKey.ndar"
 	Write-Host "Source file: $sourceFilename"
 
-	Read-S3Object -BucketName $targetBucket -File "$absoluteReportPath$sourceFilename" -Key "$sourceFileKey" -Region ap-southeast-2 | out-null
-	return "$absoluteReportPath$sourceFilename"
+	#Read-S3Object -BucketName $targetBucket -File "$absoluteReportPath$sourceFilename" -Key "$sourceFileKey" -Region ap-southeast-2 | out-null
+	Read-S3Object -BucketName $targetBucket -File $sourceFilename -Key "$sourceFileKey" -Region ap-southeast-2 | out-null
+	return $sourceFilename
 }
 
 
@@ -134,7 +135,7 @@ function WriteChildProcessOutput
 function AnalyseSolution([Parameter(Mandatory=$True)][string]$previousFilename)
 {
 	Write-Host "Analysing Solution and comparing to:- $previousFilename"
-	& $nDepend $targetFile /OutDir .\$outputFolder /AnalysisResultToCompareWith $previousFilename 2>&1 | WriteChildProcessOutput
+	& $nDepend $targetFile /OutDir .\$outputFolder /AnalysisResultToCompareWith ..\$previousFilename 2>&1 | WriteChildProcessOutput
 
 	return $LASTEXITCODE
 }
@@ -144,6 +145,12 @@ function AnalyseBaseline()
 	Write-Host "Analysing Baseline"
 	& $nDepend $targetFile /OutDir .\$outputFolder | WriteChildProcessOutput
 	return $LASTEXITCODE
+}
+
+
+function ClearOutput
+{
+	Remove-Item -Recurse -Force $absoluteReportPath -ErrorAction SilentlyContinue
 }
 
 if ([bool]$Baseline -eq $true)
@@ -156,6 +163,9 @@ if ([bool]$Baseline -eq $true)
 	}
 	exit
 }
+
+ClearOutput
+RestoreLatestReportFromS3
 
 Write-Host "Building solution..."
 .\build.ps1 | out-null
