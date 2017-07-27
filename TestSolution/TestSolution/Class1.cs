@@ -15,20 +15,30 @@ namespace TestSolution
 
         public void Method()
         {
-            for (int i = 0; i < 10; i++)
-            {
-                Console.WriteLine("In ur methodz");
-            }
 
-            Console.WriteLine("breakin ur rulez");
-            Console.WriteLine("breakin ur rulez");
-            Console.WriteLine("breakin ur rulez");
-            Console.WriteLine("breakin ur rulez");
-            Console.WriteLine("breakin ur rulez really");
-            Console.WriteLine("breakin ur rulez really");
-            Console.WriteLine("breakin ur rulez really");
-            Console.WriteLine("breakin ur rulez really");
-            Console.WriteLine("breakin ur asdfasdf really");
+            Console.WriteLine("breakin ur rulez asdfdassf");
+            Console.WriteLine("breakin ur rulez asdfdassf");
+            Console.WriteLine("breakin ur rulez asfdfdassf");
+            Console.WriteLine("breakin ur rulez asdfdassf");
+            Console.WriteLine("breakin ur rulez asdfdassf");
+            Console.WriteLine("breakin ur rulez asdfdassf");
+            Console.WriteLine("breakin ur rulez asdfdassf");
+            Console.WriteLine("breakin ur rulez asdfdassf");
+            Console.WriteLine("breakin ur rulez asdfdassf");
+            Console.WriteLine("breakin ur rulez asdfdassf");
+            Console.WriteLine("breakin ur rulez asdfdassf");
+            Console.WriteLine("breakin ur rulez asdfdassf");
+            Console.WriteLine("breakin ur rulez asdfdassf");
+            Console.WriteLine("breakin ur rulez asdfdassf");
+            Console.WriteLine("breakin ur rulez asdfdassf");
+            Console.WriteLine("breakin ur rulez asdfdassf");
+            Console.WriteLine("breakin ur rulez asdfdassf");
+            Console.WriteLine("breakin ur rulez asdfdassf");
+            Console.WriteLine("breakin ur rulez asdfdassf");
+            Console.WriteLine("breakin ur rulez asdfdassf");
+            Console.WriteLine("breakin ur rulez asdfdassf");
+            Console.WriteLine("breakin ur rulez asdfdassf");
+            Console.WriteLine("breakin ur rulez asdfdassf");
             Console.WriteLine("breakin ur rulez asdfdassf");
         }
     }

@@ -17,7 +17,9 @@ select new { m, m.NbLinesOfCode }
 
 param
 (
-	[Parameter(Mandatory=$False)][string]$BaselineFilePath
+	[Parameter(Mandatory=$False)][bool]$Baseline,
+	[Parameter(Mandatory=$False)][bool]$Diagnostics
+
 )
 
 $AWSAccessKey = ''
@@ -31,7 +33,6 @@ $projectFolder = Split-Path -Path $targetFile
 $outputFolder = "nDepend.Reports"
 $targetBucket = "ndepend-reports"
 $absoluteReportPath = "$projectFolder\$outputFolder\"
-$relativeReportPath = Resolve-Path -Relative $absoluteReportPath
 
 $previous = ""
 Clear-Host
@@ -40,19 +41,27 @@ Import-Module AWSPowershell
 Set-AWSCredentials -AccessKey $AWSAccessKey -SecretKey $AWSSecretKey -SessionToken $AWSSessionToken
 
 function BackupBaselineReportToS3()
+
 {
-	BackupReportToS3 $BaselineFilePath "baseline"
+	$latestReport = GetLatestReport
+	BackupReportToS3 "$absoluteReportPath$latestReport" "baseline"
 }
 
 function BackupSuccessfulReportToS3()
 {
 	if (Test-Path $projectFolder\$outputFolder\*.ndar)
 	{
-		$latestReport = (Get-ChildItem -Filter "$relativeReportPath\*.ndar" | Sort-Object -Property LastWriteTime -Descending | Select-Object -First 1).Name
+		$latestReport = GetLatestReport
 		$targetFileKey = iex "git rev-parse head"
 
 		BackupReportToS3 "$absoluteReportPath$latestReport" $targetFileKey
 	}
+}
+
+function GetLatestReport()
+{
+	$relativeReportPath = Resolve-Path -Relative $absoluteReportPath
+	return (Get-ChildItem -Filter "$relativeReportPath\*.ndar" | Sort-Object -Property LastWriteTime -Descending | Select-Object -First 1).Name
 }
 
 function BackupReportToS3([Parameter(Mandatory=$True)][string]$sourceFilePath, [Parameter(Mandatory=$True)][string]$targetFileKey)
@@ -101,15 +110,50 @@ function RestoreReportFromS3([Parameter(Mandatory=$True)][string]$sourceFileKey)
 	return "$absoluteReportPath$sourceFilename"
 }
 
+
+function WriteChildProcessOutput
+{
+	PROCESS
+	{
+		if ([bool]$Diagnostics -eq $true)
+		{
+			ForEach-Object {
+				if ($_ -is [System.Management.Automation.ErrorRecord])
+				{
+					Write-Error $_
+				}
+				else
+				{
+					Write-Host $_ -ForegroundColor Green
+				}
+			}
+		}
+	}
+}
+
 function AnalyseSolution([Parameter(Mandatory=$True)][string]$previousFilename)
 {
-	& $nDepend $targetFile /Silent /OutDir .\$outputFolder /AnalysisResultToCompareWith $previousFilename
+	Write-Host "Analysing Solution and comparing to:- $previousFilename"
+	& $nDepend $targetFile /OutDir .\$outputFolder /AnalysisResultToCompareWith $previousFilename 2>&1 | WriteChildProcessOutput
+
 	return $LASTEXITCODE
 }
 
-if (![string]::IsNullOrEmpty($BaselineFilePath))
+function AnalyseBaseline()
 {
-	BackupBaselineReportToS3
+	Write-Host "Analysing Baseline"
+	& $nDepend $targetFile /OutDir .\$outputFolder | WriteChildProcessOutput
+	return $LASTEXITCODE
+}
+
+if ([bool]$Baseline -eq $true)
+{
+	$x = AnalyseBaseline
+	Write-Host $x
+	if ($x -eq 0)
+	{
+		BackupBaselineReportToS3
+	}
 	exit
 }
 
