@@ -4,7 +4,7 @@
 2. Run `analyze.ps1` or `analyze.ps1 -Baseline $true` if you don't yet have a baseline
 3. Modify a method so so that the end result has more than ten lines of code OR add a new method with more than 10 lines of code
 4. Build again
-5. Run `analyze.ps1` or `analyze.ps1 -Diagnostics $true` to see the nDepend output
+5. Run `analyze.ps1` or `analyze.ps1 -Diagnostics $false` to hide the nDepend output
 
 Expected result: an error should be output base on the quality gate 'You Touched it Last'
 
@@ -14,7 +14,8 @@ Expected result: an error should be output base on the quality gate 'You Touched
 - [X] Convert it to use S3 to store the _previous.ndar_ file (keyed by solution name probably)
 - [X] Before running analysis, grab the previous from S3
 - [X] Need to modify the backup process so it grabs the latest report by date, not by name
-- [ ] Possible issue in that we save previous.ndar regardless of the results, therefore commiting again = no fail because its the same (aka. only backup on success)
+- [X] Have the ndepend bucket use separate folders per repository
+- [X] Possible issue in that we save previous.ndar regardless of the results, therefore commiting again = no fail because its the same (aka. only backup on success)
 - [ ] Move to monolith
 - [ ] Get in Phabricator (how do we get _nDepend.exe_ on the build agent?)
 - [ ] Come up with a decent message that makes sense to the end user, list the methods that are violating the rule

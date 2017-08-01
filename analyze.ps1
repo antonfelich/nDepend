@@ -18,7 +18,7 @@ select new { m, m.NbLinesOfCode }
 param
 (
 	[Parameter(Mandatory=$False)][bool]$Baseline,
-	[Parameter(Mandatory=$False)][bool]$Diagnostics
+	[Parameter(Mandatory=$False)][bool]$Diagnostics=$true
 
 )
 
@@ -71,10 +71,23 @@ function BackupReportToS3([Parameter(Mandatory=$True)][string]$sourceFilePath, [
 	Write-Host "Source file: $sourceFilePath"
 	Write-Host "Target bucket: $targetBucket"
 	Write-Host "Target file key: $targetFileKey"
+	$keyPrefix = GetRepositoryName
+	Write-Host "Key prefix: $keyPrefix"
 
-	Write-S3Object -BucketName $targetBucket -File $sourceFilePath -Key "$targetFileKey" -Region ap-southeast-2
+	Write-S3Object -BucketName $targetBucket -File $sourceFilePath -Key "$keyPrefix/$targetFileKey" -Region ap-southeast-2
 
 	Write-Host "File backed up to S3 successfully"
+}
+
+function GetRepositoryName
+{
+	$repositoryUrl = iex "git config --get remote.origin.url"
+	Write-Host "Repository url: $repositoryUrl"
+	$parts = $repositoryUrl.Split('/')
+	$last = $parts[$parts.Length-1]
+
+	$name = $last.Split('.')[0];
+	return $name;
 }
 
 
@@ -103,11 +116,14 @@ function RestoreReportFromS3([Parameter(Mandatory=$True)][string]$sourceFileKey)
 	Write-Host "Restoring NDAR report from S3 by key [$sourceFileKey]"
 	Write-Host "Source bucket: $targetBucket"
 
+	$keyPrefix = GetRepositoryName
+	Write-Host "Key prefix: $keyPrefix"
+
 	$sourceFilename = "$sourceFileKey.ndar"
 	Write-Host "Source file: $sourceFilename"
 
 	#Read-S3Object -BucketName $targetBucket -File "$absoluteReportPath$sourceFilename" -Key "$sourceFileKey" -Region ap-southeast-2 | out-null
-	Read-S3Object -BucketName $targetBucket -File $sourceFilename -Key "$sourceFileKey" -Region ap-southeast-2 | out-null
+	Read-S3Object -BucketName $targetBucket -File $sourceFilename -Key "$keyPrefix/$sourceFileKey" -Region ap-southeast-2 | out-null
 	return $sourceFilename
 }
 
@@ -150,25 +166,29 @@ function AnalyseBaseline()
 
 function ClearOutput
 {
+	Write-Host "Cleaning up previous analysis results from: $absoluteReportPath"
 	Remove-Item -Recurse -Force $absoluteReportPath -ErrorAction SilentlyContinue
 }
+
+ClearOutput
+
+Write-Host "Building solution..."
+.\build.ps1 | out-null
 
 if ([bool]$Baseline -eq $true)
 {
 	$x = AnalyseBaseline
-	Write-Host $x
 	if ($x -eq 0)
 	{
+		Write-Host "Baseline analysis complete, all checks passed."
 		BackupBaselineReportToS3
 	}
-	exit
+	else
+	{
+		Write-Error "Baseline analysis complete, check(s) failed. See log for further details."
+		exit
+	}
 }
-
-ClearOutput
-RestoreLatestReportFromS3
-
-Write-Host "Building solution..."
-.\build.ps1 | out-null
 
 #Download the previous comparison file (or get baseline if there isn't one)
 $previous = RestoreLatestReportFromS3
@@ -181,5 +201,10 @@ $result = AnalyseSolution $previous
 # If success then copy current.ndar over previous.ndar and backup history
 if ($result -eq 0)
 {
+	Write-Host "Analysis complete, all checks passed."
 	BackupSuccessfulReportToS3
+}
+else
+{
+	Write-Error "Analysis complete, check(s) failed. See log for further details."
 }

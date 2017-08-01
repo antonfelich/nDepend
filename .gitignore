@@ -260,3 +260,4 @@ NDepend.Console.exe
 NDepend.PowerTools.exe
 NDepend.VisualStudioExtension.Installer.exe
 VisualNDepend.exe
+*.ndar
