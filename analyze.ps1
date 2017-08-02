@@ -1,13 +1,3 @@
-<#
-
-// <QualityGate Name="You Touched it Last - Method Length" Unit="methods" />
-failif count > 0 methods
-from  m in Methods
-where m.NbLinesOfCode > 3
-where m.CodeWasChanged()
-select new { m, m.NbLinesOfCode }
-
-#>
 # param
 # (
 #     [Parameter(Mandatory=$True)][string]$AWSAccessKey,
@@ -18,7 +8,10 @@ select new { m, m.NbLinesOfCode }
 param
 (
 	[Parameter(Mandatory=$False)][bool]$Baseline,
-	[Parameter(Mandatory=$False)][bool]$Diagnostics=$true
+	[Parameter(Mandatory=$False)][bool]$Diagnostics=$true,
+	[Parameter(Mandatory=$False)][bool]$Build=$false,
+	[Parameter(Mandatory=$False)][string]$nDepend=".\NDepend.Console.exe"
+	[Parameter(Mandatory=$False)][string]$targetFile=".\NDepend.Console.exe"
 
 )
 
@@ -26,9 +19,12 @@ $AWSAccessKey = ''
 $AWSSecretKey = ''
 $AWSSessionToken = ''
 
-$root = pwd
-$nDepend = ".\NDepend.Console.exe"
-$targetFile =  "$root\TestSolution\TestSolution.ndproj"
+# Validate the targetFile is an absolute path
+if ([System.IO.Path]::IsPathRooted($targetFile) -eq $false)
+{
+	$targetFile = [System.IO.Path]::GetFullPath($targetFile)
+}
+
 $projectFolder = Split-Path -Path $targetFile
 $outputFolder = "nDepend.Reports"
 $targetBucket = "ndepend-reports"
@@ -172,8 +168,11 @@ function ClearOutput
 
 ClearOutput
 
-Write-Host "Building solution..."
-.\build.ps1 | out-null
+if ([bool]$Build -eq $true)
+{
+	Write-Host "Building solution..."
+	.\build.ps1 | out-null
+}
 
 if ([bool]$Baseline -eq $true)
 {

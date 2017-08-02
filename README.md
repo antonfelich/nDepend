@@ -16,7 +16,15 @@ Expected result: an error should be output base on the quality gate 'You Touched
 - [X] Need to modify the backup process so it grabs the latest report by date, not by name
 - [X] Have the ndepend bucket use separate folders per repository
 - [X] Possible issue in that we save previous.ndar regardless of the results, therefore commiting again = no fail because its the same (aka. only backup on success)
-- [ ] Move to monolith
-- [ ] Get in Phabricator (how do we get _nDepend.exe_ on the build agent?)
+- Get in Build Agent
+    - [ ] Talk to nDepend and exchange a dev license for a stand alone exe
+    - [ ] Zip up the exe and add it to the build-agent-bootstrap repo (along with the changes in the Build.ps1)
+    - [ ] COMMIT the changes so when you run Build.ps1 it pulls the changes
+    - [ ] Make the new image
+    - [ ] Deploy as per [This](https://docs.google.com/document/d/1WOjo1IMgukiE58jiM4WNPvDZ9DS300Qa7f-ZZMHSPrk/edit?ts=5977d745)
+- Move to monolith
+    - [X] Get the build.ps1 to execute the Analyse.ps1 file
+    - [ ] Add the -TestCodeQuality flag = $true to the build plan (This will still do nothing as we have a dummy Analyse.ps1 file)
+    - [ ] Replace the sample Analyse.ps1 file with the real thing
 - [ ] Come up with a decent message that makes sense to the end user, list the methods that are violating the rule
 - [ ] Fix up the rule so that its 10 lines (we have set to 3 for testing)
