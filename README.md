@@ -26,5 +26,10 @@ Expected result: an error should be output base on the quality gate 'You Touched
     - [X] Get the build.ps1 to execute the Analyse.ps1 file
     - [X] Add the -TestCodeQuality flag = $true to the build plan (This will still do nothing as we have a dummy Analyse.ps1 file)
     - [ ] Replace the sample Analyse.ps1 file with the real thing
+    - [ ] Change Analyse.ps1 so it gets the AWS keys from passphrase
+    - [ ] Update the tooling paths in Analyse.ps1
+    - [ ] Add a rule and take a baseline
+    - [ ] Talking to TLG + Floor (TCSC) - Decide on the rules, when should it run? (Diff or RC or Licences for everybody)
+    - [ ]
 - [ ] Come up with a decent message that makes sense to the end user, list the methods that are violating the rule
 - [ ] Fix up the rule so that its 10 lines (we have set to 3 for testing)
